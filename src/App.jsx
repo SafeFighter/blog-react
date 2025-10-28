@@ -1,10 +1,20 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+
+import Home from "./pages/Home.jsx";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Registration from "./pages/Registration.jsx";
 
 function App() {
-  return <></>;
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/blog/registration" element={<Registration />} />
+        </Routes>
+      </Router>
+    </>
+  );
 }
 
 export default App;
