@@ -45,7 +45,6 @@ function Dashboard() {
   if (loading) {
     return <p>⏳ Loading ...</p>;
   }
-  console.log("POSTS →", posts);
 
   return (
     <>
@@ -60,7 +59,7 @@ function Dashboard() {
 
       <div className="posts-container">
         {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
+          <PostCard key={post.id} post={post} isAdmin={isAdmin} />
         ))}
       </div>
     </>
