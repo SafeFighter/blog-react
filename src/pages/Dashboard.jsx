@@ -8,10 +8,6 @@ function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
-
-  const LIMIT = 5;
 
   useEffect(() => {
     async function fetchUser() {
@@ -19,6 +15,7 @@ function Dashboard() {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+
       if (user) {
         const { data: adminRows } = await supabase
           .from("admins")
@@ -30,29 +27,27 @@ function Dashboard() {
     fetchUser();
   }, []);
 
-  const fetchPosts = async () => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + LIMIT - 1);
-
-    if (error) {
-      console.log("Error: ", error);
-      return;
-    }
-
-    if (data.length < LIMIT) {
-      setHasMore(false);
-    }
-
-    setPosts((prev) => [...prev, ...data]);
-    setOffset((prev) => prev + LIMIT);
-    setLoading(false);
-  };
   useEffect(() => {
+    async function fetchPosts() {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.log("Error fetching posts:", error);
+      } else {
+        setPosts(data);
+      }
+
+      setLoading(false);
+    }
+
     fetchPosts();
   }, []);
+
   if (loading) {
     return <p>⏳ Loading ...</p>;
   }
@@ -60,6 +55,7 @@ function Dashboard() {
   return (
     <>
       <h1>Dashboard menu! Welcome!</h1>
+
       {isAdmin ? (
         <Link to="/blog/create">
           <button>Create new post</button>
@@ -68,19 +64,17 @@ function Dashboard() {
         "You are not admin"
       )}
 
+      <Link to="/blog/search">
+        <button>Search Posts</button>
+      </Link>
+
       <div className="posts-container">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} isAdmin={isAdmin} />
         ))}
-        {hasMore ? (
-          <button onClick={fetchPosts} disabled={loading}>
-            Load More Posts
-          </button>
-        ) : (
-          <p>No More Posts</p>
-        )}
       </div>
     </>
   );
 }
+
 export default Dashboard;
