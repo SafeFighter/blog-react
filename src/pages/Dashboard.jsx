@@ -8,6 +8,10 @@ function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+
+  const LIMIT = 5;
 
   useEffect(() => {
     async function fetchUser() {
@@ -26,20 +30,27 @@ function Dashboard() {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    async function fetchPosts() {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false });
+  const fetchPosts = async () => {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + LIMIT - 1);
 
-      if (error) {
-        console.log("Greska: ", error);
-      } else {
-        setPosts(data);
-      }
-      setLoading(false);
+    if (error) {
+      console.log("Error: ", error);
+      return;
     }
+
+    if (data.length < LIMIT) {
+      setHasMore(false);
+    }
+
+    setPosts((prev) => [...prev, ...data]);
+    setOffset((prev) => prev + LIMIT);
+    setLoading(false);
+  };
+  useEffect(() => {
     fetchPosts();
   }, []);
   if (loading) {
@@ -61,6 +72,13 @@ function Dashboard() {
         {posts.map((post) => (
           <PostCard key={post.id} post={post} isAdmin={isAdmin} />
         ))}
+        {hasMore ? (
+          <button onClick={fetchPosts} disabled={loading}>
+            Load More Posts
+          </button>
+        ) : (
+          <p>No More Posts</p>
+        )}
       </div>
     </>
   );
